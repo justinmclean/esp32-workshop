@@ -91,11 +91,12 @@ the WAV buffer allocated until playback finishes.
 
 ### Set up an agent (once, in the ElevenLabs web app)
 
-1. Create an agent. Give it a short first message, such as "Hi, I'm running on an ESP32. What shall we talk about?"
+1. Create an agent. Give it a short first message, such as "Hi, I'm running on an ESP32. What shall we talk about?" In its system prompt, ask it to **keep answers to one or two short sentences**: the device waits for the whole reply before playing it, so long answers mean a long pause.
 2. Make it **public** (no authentication). The device then needs only the agent ID, not your API key.
 3. In the agent's voice or advanced settings, set both the **input and output audio format to PCM 16000 Hz**. The device reads the formats when it connects and refuses ulaw.
 4. Add a **client tool** named `show_message` with one string parameter, `text`, described as "Show a short message on the user's device screen". Tick "wait for response".
-5. Put the agent ID in `secrets.h` as `ELEVENLABS_AGENT_ID`.
+5. Put the agent ID in `secrets.h` as `ELEVENLABS_AGENT_ID`. The ID is in the address bar when the agent is open: the part starting `agent_`, up to the next `/`.
+6. Optional: check the agent from your laptop before using the board. `tools/agent_check.py` in the repo root talks to it exactly as the device does and reports what comes back.
 
 Exact menu names in the ElevenLabs app change over time; ask a helper if you cannot find a setting.
 
@@ -145,7 +146,13 @@ Unknown tools get is_error true.
 - **Activity mode.** Keep the mic open, measure the level of each chunk, and only open a conversation (or send a clip to ElevenLabs speech to text) when the level crosses a threshold. Cap clip length so it cannot burn your credits.
 - **Keyword tools.** Check the `user_transcript` text for words like "lights" or "record" and trigger device actions locally.
 
-### Known gaps, to check in the dry run
+### Tested from a laptop (26 Nov 2026)
 
-- The ElevenLabs docs do not define a push to talk end-of-turn message. The trailing silence relies on the server's voice detection.
-- Agent minutes per test conversation, so we know how far the free tier goes.
+`tools/agent_check.py` ran the device's protocol against a real agent:
+
+- Push to talk works: 1.2 s of trailing silence ended the turn, the transcript arrived about 0.7 s after release, reply audio started 1.1 s after release and finished arriving 3.6 s after release. The device starts playing 0.7 s after that, so expect about 4 s from release to sound for a two sentence answer.
+- The `show_message` tool was called with the right text.
+- 26 of 54 messages were over 15 KB, the largest 40.8 KB. A WebSocket library with a 15 KB limit would have dropped the connection.
+- Agent text includes voice tags like `[happy]`. The device strips them before display.
+
+Still to check on a board: TLS with the pinned root certificates on the ESP32, and agent minutes per test conversation.

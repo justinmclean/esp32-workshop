@@ -25,7 +25,7 @@
 #define CHUNK_MS 100
 #define SILENCE_CHUNKS 12          // 1.2 s of silence after you let go
 #define REPLY_GAP_MS 700           // agent audio quiet this long = reply done
-#define MAX_REPLY_SECONDS 20
+#define MAX_REPLY_SECONDS 40       // 1.3 MB per buffer at 16 kHz; longer replies are cut
 
 enum ChatState { CHAT_OFF, CHAT_STARTING, CHAT_READY, CHAT_TALKING, CHAT_WAITING };
 static ChatState chat_state = CHAT_OFF;
@@ -102,6 +102,20 @@ static void set_state(ChatState s, const char *msg = nullptr, uint16_t colour = 
   chat_state = s;
   chat_draw_buttons();
   if (msg) status(msg, colour);
+}
+
+// Copy agent text without voice tags such as "[happy] " that ElevenLabs
+// includes for expressive voices: they are for the voice, not the screen.
+static void copy_without_tags(char *dst, size_t cap, const char *src) {
+  size_t n = 0;
+  for (const char *p = src; *p && n + 1 < cap; p++) {
+    if (*p == '[') {
+      const char *end = strchr(p, ']');
+      if (end) { p = end; if (p[1] == ' ') p++; continue; }
+    }
+    dst[n++] = *p;
+  }
+  dst[n] = 0;
 }
 
 // ---- audio helpers ------------------------------------------------------------
@@ -212,7 +226,7 @@ static void on_message(char *text, size_t len) {
     strlcpy(you_said, doc["user_transcription_event"]["user_transcript"] | "", sizeof you_said);
     chat_draw_text();
   } else if (!strcmp(type, "agent_response")) {
-    strlcpy(agent_said, doc["agent_response_event"]["agent_response"] | "", sizeof agent_said);
+    copy_without_tags(agent_said, sizeof agent_said, doc["agent_response_event"]["agent_response"] | "");
     chat_draw_text();
   } else if (!strcmp(type, "client_tool_call")) {
     handle_tool_call(doc["client_tool_call"]);
