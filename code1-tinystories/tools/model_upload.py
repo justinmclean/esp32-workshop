@@ -19,7 +19,7 @@ def upload_model(source, target, env):
     project_dir = env.subst("$PROJECT_DIR")
     model = os.path.join(project_dir, "model", "model.bin")
     if not os.path.isfile(model):
-        print("model/model.bin not found. Copy it from the workshop USB stick or SD card.")
+        print("model/model.bin not found. Download it first: see step 1 in code1-tinystories/README.md.")
         env.Exit(1)
     env.AutodetectUploadPort()
     cmd = '"$UPLOADER" --chip esp32s3 --port "$UPLOAD_PORT" --baud $UPLOAD_SPEED write-flash %s "%s"' % (

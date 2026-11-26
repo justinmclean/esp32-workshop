@@ -178,7 +178,8 @@
   <h2>A 28.9M parameter LLM on your CoreS3</h2>
   <p>A story model trained on TinyStories, running entirely on the chip. No cloud. Folder <code>code1-tinystories</code>.</p>
   <pre><button class="copy">Copy</button>cd code1-tinystories
-# copy model.bin from the USB stick into model/
+curl -L -o model/model.bin https://huggingface.co/slvDev/esp32-ai-tinystories/resolve/main/model.bin
+# Windows: curl.exe -L -o model\model.bin (same URL)
 pio run -t uploadmodel    # once per board, 15 MB, a minute or two
 pio run -t upload
 pio device monitor</pre>

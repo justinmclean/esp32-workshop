@@ -50,7 +50,7 @@ What this means for the CoreS3 SE:
 - **PSRAM type probably differs.** PlatformIO's `m5stack-cores3` board definition configures quad PSRAM, not octal. If so, expect roughly half the PSRAM bandwidth and something like 5 to 7 tokens per second. Still a fine demo. **Verify on hardware**: the sketch prints its PSRAM allocation at boot.
 - **Display needs a small port.** Replace `display.h` with an M5GFX version (`display_begin`, `display_puts`). Under 100 lines.
 - **Toolchain fits.** PlatformIO espressif32 8.0.0 here ships Arduino core 3.3.x, so the IDF 5 partition API is available. A minimal CoreS3 build already succeeds on this Mac.
-- **Model delivery.** Do not have 15 people pull 15 MB from Hugging Face on hotspot data. Put `model.bin` on the USB stick or SD card handouts, and check the model licence allows redistribution.
+- **Model delivery.** Participants download `model.bin` (15 MB) from Hugging Face, ideally before the day; 15 people is about 225 MB in total. Keep a copy on a USB stick in case the network is poor. The model is MIT licensed, so redistributing it is fine.
 
 Recommended shape for Code 1: the trainer repo ports it once to a PlatformIO project for `m5stack-cores3` with the custom partition table and an M5GFX `display.h`, plus a cross-platform upload step (`pio run -t upload`, then `pio pkg exec -p tool-esptool -- esptool.py write_flash 0x110000 model.bin`). Participants clone, flash and watch it run in under 20 minutes. Claude's job in Code 1 is explaining the memory tiers, not porting.
 

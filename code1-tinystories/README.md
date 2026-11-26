@@ -6,7 +6,22 @@ It is a port of [slvDev/esp32-ai](https://github.com/slvDev/esp32-ai) (`firmware
 
 ## Run it
 
-1. Copy `model.bin` from the workshop USB stick or SD card into the `model/` folder.
+1. Download the model (15 MB, best done before the day) into the `model/` folder. From this folder:
+
+   Mac or Linux:
+   ```
+   curl -L -o model/model.bin https://huggingface.co/slvDev/esp32-ai-tinystories/resolve/main/model.bin
+   shasum -a 256 model/model.bin
+   ```
+
+   Windows PowerShell:
+   ```
+   curl.exe -L -o model\model.bin https://huggingface.co/slvDev/esp32-ai-tinystories/resolve/main/model.bin
+   Get-FileHash model\model.bin
+   ```
+
+   The hash must be `1d8326c05c383ccfa615f5455575802817cb453dbc7ab28875d41a9dbb45477e`. If it differs, download again.
+
 2. Plug in the CoreS3 and run, from this folder:
 
    ```
@@ -68,4 +83,4 @@ Model files come from [huggingface.co/slvDev/esp32-ai-tinystories](https://huggi
 4e28163669f2249af31a528a54fc25064dcbd0a34edbfa7bedb16d2d600ec7ae  tokenizer.json
 ```
 
-`model.bin` and `tokenizer.json` are gitignored. Put `model.bin` on the participant USB sticks and SD cards.
+`model.bin` and `tokenizer.json` are gitignored: participants download `model.bin` themselves (step 1 above). Keep a copy on a USB stick as a fallback if the venue network is poor.
