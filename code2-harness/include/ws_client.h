@@ -131,8 +131,15 @@ class WsClient {
   bool reserve(size_t need) {
     if (need <= msg_cap_) return true;
     size_t cap = max(need, msg_cap_ * 2);
+    // PSRAM if the board has it, otherwise internal RAM (fine for one
+    // 40-50 KB audio message on boards without PSRAM).
     uint8_t *p = (uint8_t *)heap_caps_realloc(msg_, cap, MALLOC_CAP_SPIRAM);
+    if (!p) {
+      cap = need;  // internal RAM is scarce: take exactly what is needed
+      p = (uint8_t *)heap_caps_realloc(msg_, cap, MALLOC_CAP_8BIT);
+    }
     if (!p) return false;
+
     msg_ = p;
     msg_cap_ = cap;
     return true;

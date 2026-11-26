@@ -7,6 +7,7 @@ When you are done, run the check script for your OS. Every line should be OK or 
 ## Everyone
 
 - A USB **data** cable for the CoreS3 (many C-to-C cables are charge only; if no serial port appears, swap the cable first).
+- If you bring your own micro SD card, it must be **FAT32**, not exFAT. Cards over 32 GB come as exFAT and the ESP32 cannot read them. On a Mac: Disk Utility, Show All Devices, select the card, Erase as MS-DOS (FAT) with Master Boot Record. On Windows, use a FAT32 formatting tool, because Windows will not offer FAT32 for large cards. Formatting erases the card.
 - A phone hotspot on **2.4 GHz**. The ESP32 cannot see 5 GHz networks.
   - iPhone: Settings > Personal Hotspot > turn on **Maximise Compatibility**.
   - Android: Hotspot > Band > **2.4 GHz**.
