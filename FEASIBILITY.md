@@ -84,6 +84,10 @@ Recommended shape for Code 1: the trainer repo ports it once to a PlatformIO pro
 3. Press to chat end to end with a public ElevenLabs agent, and how many agent minutes a 3 minute test uses.
 4. `check-windows.ps1` on a clean Windows 11 laptop.
 5. How far Claude Pro gets through Code 2 and one Code 3 item before hitting limits.
+6. Push to talk turn ending. The ElevenLabs docs define no end-of-turn message, so the reference sends 1.2 s of silence after release and relies on the server's voice detection.
+7. The reference WebSocket client against the live API: TLS with the pinned Google Trust Services roots, and audio messages over 15 KB.
+
+Reference implementations for Code 2 and Code 3 are in `code2-harness/` (Chat screen for Code 3). Both build; neither has run on a board.
 
 ## Sources
 

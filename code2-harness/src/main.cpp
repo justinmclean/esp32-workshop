@@ -1,26 +1,27 @@
-// Code 2 reference harness for the M5Stack CoreS3 / CoreS3 SE.
+// Code 2 and 3 reference harness for the M5Stack CoreS3 / CoreS3 SE.
 //
 // Home menu with four screens:
 //   WiFi    scan, connect to the network in secrets.h, disconnect
 //   Record  hold to record, saved as WAV on the SD card
 //   Play    tap a recording to hear it
-//   Chat    placeholder for Code 3 (ElevenLabs voice assistant)
+//   Chat    Code 3: press to chat with an ElevenLabs agent
 //
-// Each screen lives in its own header: wifi_screen.h, recorder.h. Add a new
+// Each screen lives in its own header: wifi_screen.h, recorder.h, chat.h. Add a new
 // screen by adding a Screen value, a home button and a case in loop().
 #include <M5Unified.h>
 #include "ui.h"
 #include "wifi_screen.h"
 #include "recorder.h"
+#include "chat.h"
 
-enum Screen { HOME, WIFI_SCREEN, RECORD, PLAY };
+enum Screen { HOME, WIFI_SCREEN, RECORD, PLAY, CHAT };
 static Screen screen = HOME;
 
 static Button home_btns[] = {
   {12,  HEADER_H + 12, 142, 80, "WiFi",   TFT_DARKCYAN,  true},
   {166, HEADER_H + 12, 142, 80, "Record", TFT_RED,       true},
   {12,  HEADER_H + 104, 142, 80, "Play",  TFT_DARKGREEN, true},
-  {166, HEADER_H + 104, 142, 80, "Chat",  TFT_PURPLE,    false},  // Code 3
+  {166, HEADER_H + 104, 142, 80, "Chat",  TFT_PURPLE,    true},   // Code 3
 };
 
 static void home_draw() {
@@ -40,6 +41,7 @@ static void go(Screen s) {
     case WIFI_SCREEN: wifi_draw(); break;
     case RECORD:      rec_draw();  break;
     case PLAY:        play_draw(); break;
+    case CHAT:        chat_draw(); break;
   }
 }
 
@@ -66,6 +68,7 @@ void loop() {
         if (button_hit(home_btns[0], x, y)) go(WIFI_SCREEN);
         else if (button_hit(home_btns[1], x, y)) go(RECORD);
         else if (button_hit(home_btns[2], x, y)) go(PLAY);
+        else if (button_hit(home_btns[3], x, y)) go(CHAT);
       }
       break;
     case WIFI_SCREEN:
@@ -76,6 +79,10 @@ void loop() {
       break;
     case PLAY:
       if (tapped(x, y) && !play_handle_tap(x, y)) go(HOME);
+      break;
+    case CHAT:
+      if (!chat_handle()) go(HOME);
+      else chat_loop();
       break;
   }
   delay(10);

@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI-powered ESP32 development with PlatformIO</title>
+<style>
+  :root {
+    --ink: #1b1f24; --muted: #5b6470; --line: #d9dee4; --bg: #fbfbf9; --panel: #ffffff;
+    --accent: #c2410c; --accent-soft: #fff1e8; --ok: #15803d; --warn: #b45309; --bad: #b91c1c;
+    --code-bg: #f3f4f1;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  .deck { height: 100vh; display: flex; flex-direction: column; }
+  .slide { display: none; flex: 1; padding: 5vh 7vw 3vh; overflow: auto; }
+  .slide.active { display: block; }
+  h1 { font-size: clamp(2rem, 4.6vw, 3.6rem); line-height: 1.1; margin: 0 0 .4em; letter-spacing: -.01em; }
+  h2 { font-size: clamp(1.6rem, 3.2vw, 2.5rem); margin: 0 0 .6em; letter-spacing: -.01em; }
+  h3 { font-size: 1.15rem; margin: 1.2em 0 .4em; color: var(--accent); text-transform: uppercase; letter-spacing: .06em; }
+  p, li, td, th { font-size: clamp(1rem, 1.7vw, 1.35rem); line-height: 1.5; }
+  .kicker { color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: .12em; font-size: .95rem; }
+  .muted { color: var(--muted); }
+  .big { font-size: clamp(1.2rem, 2.2vw, 1.7rem); }
+  ul { padding-left: 1.2em; } li { margin: .25em 0; }
+  table { border-collapse: collapse; width: 100%; margin: .4em 0 1em; }
+  th, td { text-align: left; padding: .45em .7em; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: .95rem; text-transform: uppercase; letter-spacing: .05em; }
+  code, pre { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+  code { background: var(--code-bg); padding: .1em .35em; border-radius: 4px; font-size: .9em; }
+  pre { background: var(--code-bg); padding: 1em 1.2em; border-radius: 8px; font-size: clamp(.85rem, 1.25vw, 1.05rem);
+    line-height: 1.45; white-space: pre-wrap; margin: .5em 0 1em; position: relative; }
+  .grid { display: grid; gap: 1.2rem 2.4rem; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 1em 1.3em; }
+  .card h3 { margin-top: 0; }
+  .tag { display: inline-block; padding: .1em .55em; border-radius: 999px; font-size: .8em; font-weight: 700; }
+  .tag.ok { background: #dcfce7; color: var(--ok); } .tag.stretch { background: #fef3c7; color: var(--warn); }
+  .tag.no { background: #fee2e2; color: var(--bad); } .tag.crit { background: var(--accent); color: #fff; }
+  .callout { border-left: 5px solid var(--accent); background: var(--accent-soft); padding: .8em 1.2em; border-radius: 0 8px 8px 0; margin: 1em 0; }
+  .check { list-style: none; padding: 0; }
+  .check li { display: flex; gap: .8em; align-items: flex-start; padding: .45em 0; border-bottom: 1px solid var(--line); cursor: pointer; }
+  .check input { width: 1.3em; height: 1.3em; margin-top: .25em; accent-color: var(--ok); flex: none; }
+  .check li.done span { color: var(--muted); text-decoration: line-through; }
+  .copy { position: absolute; top: .5em; right: .5em; border: 1px solid var(--line); background: #fff; border-radius: 6px;
+    padding: .25em .7em; font-size: .85rem; cursor: pointer; font-family: inherit; }
+  .copy.done { background: var(--ok); color: #fff; border-color: var(--ok); }
+  .tiers { display: grid; grid-template-columns: 9em 1fr; gap: .5em 1em; align-items: stretch; margin: 1em 0; }
+  .tier { padding: .7em 1em; border-radius: 8px; font-weight: 700; color: #fff; display: flex; align-items: center; }
+  .t1 { background: #0f766e; } .t2 { background: #2563eb; } .t3 { background: #7c3aed; }
+  .flow { display: flex; flex-wrap: wrap; gap: .6em; align-items: center; margin: 1em 0; }
+  .flow .step { background: var(--panel); border: 2px solid var(--accent); border-radius: 10px; padding: .5em .9em; font-weight: 600; }
+  .flow .arrow { color: var(--accent); font-weight: 700; font-size: 1.4em; }
+  footer { display: flex; align-items: center; gap: 1.2rem; padding: .6rem 1.5rem; border-top: 1px solid var(--line);
+    background: var(--panel); font-size: .95rem; color: var(--muted); }
+  footer button { border: 1px solid var(--line); background: var(--bg); border-radius: 6px; padding: .3em .8em;
+    cursor: pointer; font-size: 1rem; font-family: inherit; }
+  .progress { flex: 1; height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
+  .progress div { height: 100%; background: var(--accent); width: 0; transition: width .2s; }
+  .clock { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--ink); }
+  .clock.late { color: var(--bad); }
+  #toc { display: none; position: fixed; inset: 0; background: rgba(251,251,249,.97); padding: 4vh 7vw; overflow: auto; z-index: 10; }
+  #toc.open { display: block; }
+  #toc ol { columns: 2; font-size: 1.2rem; }
+  #toc a { color: var(--ink); text-decoration: none; } #toc a:hover { color: var(--accent); }
+  @media print {
+    .slide { display: block !important; page-break-after: always; height: auto; }
+    footer, #toc, .copy { display: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="deck">
+
+<!-- 1 -->
+<section class="slide" data-title="Welcome" data-block="intro">
+  <div class="kicker">Web Directions AI Engineer · Workshop</div>
+  <h1>AI-powered ESP32 development with PlatformIO</h1>
+  <p class="big muted">Put a language model on a microcontroller, then give it a voice.</p>
+  <div class="grid" style="margin-top:2.5em">
+    <div class="card"><h3>Hardware</h3><p>M5Stack CoreS3 SE<br>micro SD card · USB-C data cable</p></div>
+    <div class="card"><h3>Software</h3><p>VS Code · PlatformIO · Claude Code<br>ElevenLabs agent</p></div>
+    <div class="card"><h3>Wi-Fi</h3><p>Your phone hotspot on <strong>2.4 GHz</strong><br>(venue Wi-Fi has a login page)</p></div>
+  </div>
+</section>
+
+<!-- 2 -->
+<section class="slide" data-title="Today" data-block="intro">
+  <h2>Today</h2>
+  <table>
+    <tr><th>Time</th><th>Block</th><th>Outcome</th></tr>
+    <tr><td>0:00</td><td>Intro and tour</td><td>Know the board and the plan</td></tr>
+    <tr><td>0:20</td><td>Pre-code checks</td><td>Board, SD, repo, tools, ElevenLabs, hotspot all working</td></tr>
+    <tr><td>1:05</td><td>Code 1</td><td>A 28.9M parameter LLM writing stories on your CoreS3</td></tr>
+    <tr><td>1:30</td><td>Break</td><td></td></tr>
+    <tr><td>1:45</td><td>Code 2</td><td>Touch menu, Wi-Fi log in and out, record and play to SD</td></tr>
+    <tr><td>2:35</td><td>Code 3 hackathon</td><td>Talk to an ElevenLabs agent, add a feature of your choice</td></tr>
+    <tr><td>3:30</td><td>Finish</td><td></td></tr>
+  </table>
+  <p class="muted">The clock at the bottom runs against this plan. Press <code>S</code> to start it.</p>
+</section>
+
+<!-- 3 -->
+<section class="slide" data-title="Meet the CoreS3 SE" data-block="intro">
+  <h2>Meet the CoreS3 SE</h2>
+  <div class="grid">
+    <div>
+      <table>
+        <tr><td>Chip</td><td>ESP32-S3, dual core 240 MHz, Wi-Fi 2.4 GHz, BLE</td></tr>
+        <tr><td>Memory</td><td>512 KB SRAM · 8 MB PSRAM · 16 MB flash</td></tr>
+        <tr><td>Screen</td><td>2" 320×240 capacitive touch</td></tr>
+        <tr><td>Audio</td><td>Two microphones (ES7210) · speaker (AW88298)</td></tr>
+        <tr><td>Storage</td><td>micro SD slot</td></tr>
+        <tr><td>USB</td><td>USB-C, native USB on the S3: no driver needed</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h3>The SE leaves out</h3>
+      <p>Camera, IMU, magnetometer, proximity sensor, battery. Everything today uses the screen, audio, SD and Wi-Fi, so the SE does it all.</p>
+      <h3>Two shared buses</h3>
+      <p>The SD card shares SPI with the screen. The mic and speaker share one I2S bus, so <strong>only one runs at a time</strong>.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 4 -->
+<section class="slide" data-title="The ecosystem" data-block="intro">
+  <h2>The ecosystem</h2>
+  <div class="grid">
+    <div class="card"><h3>M5Stack</h3><p>Controllers, plus Grove "Units" and stackable modules for sensors, relays, motors and more. Same software stack across the range.</p></div>
+    <div class="card"><h3>M5Unified + M5GFX</h3><p>One library for screen, touch, mic, speaker and power across M5 boards. <code>M5.begin()</code> and go.</p></div>
+    <div class="card"><h3>PlatformIO</h3><p>Board <code>m5stack-cores3</code>, Arduino framework. Same commands on Windows and Mac: <code>pio run -t upload</code>.</p></div>
+    <div class="card"><h3>Claude Code</h3><p>Writes, builds and fixes the firmware with you. It reads compiler errors and serial output, so keep them short.</p></div>
+  </div>
+</section>
+
+<!-- 5 -->
+<section class="slide" data-title="Aims" data-block="intro">
+  <h2>Aims of the workshop</h2>
+  <ul class="big">
+    <li>See what an AI coding agent can and cannot do on embedded hardware</li>
+    <li>Understand how a real LLM fits in 512 KB of RAM</li>
+    <li>Build a working device harness: UI, Wi-Fi, audio, storage</li>
+    <li>Connect the device to a cloud voice agent, and let the agent call back into the device</li>
+  </ul>
+  <div class="callout"><strong>Try first, then fall back.</strong> Every step has a prompt you can give Claude and a reference implementation in the repo. Use them when you are stuck or short of time.</div>
+</section>
+
+<!-- 6 -->
+<section class="slide" data-title="Pre-code checks" data-block="precode">
+  <h2>Pre-code checks</h2>
+  <ul class="check" data-store="precode">
+    <li><input type="checkbox"><span><strong>First boot.</strong> Power up the factory demo and run through it. Learn download mode: hold reset about 3 seconds until the green LED lights.</span></li>
+    <li><input type="checkbox"><span><span class="tag crit">Critical</span> <strong>SD card.</strong> Insert the card, check the demo shows it and its files. FAT32, 32 GB or smaller.</span></li>
+    <li><input type="checkbox"><span><strong>Repo.</strong> <code>git clone</code> to a short path: <code>C:\dev\esp32-workshop</code> or <code>~/dev/esp32-workshop</code>. Not OneDrive or iCloud.</span></li>
+    <li><input type="checkbox"><span><strong>Environment.</strong> Run <code>env/check-windows.ps1</code> or <code>env/check-mac.sh</code>, then <code>pio run</code> in <code>env/hello-cores3</code>.</span></li>
+    <li><input type="checkbox"><span><strong>ElevenLabs.</strong> Account, API key, agent ID. Copy <code>secrets.example.h</code> to <code>secrets.h</code>.</span></li>
+    <li><input type="checkbox"><span><span class="tag crit">Critical</span> <strong>Hotspot.</strong> Phone hotspot on 2.4 GHz, name and password in <code>secrets.h</code>. Check it with the Wi-Fi scan in Code 2.</span></li>
+  </ul>
+  <p class="muted">Ticks are saved in this browser, so the list survives a reload.</p>
+</section>
+
+<!-- 7 -->
+<section class="slide" data-title="Hotspot on 2.4 GHz" data-block="precode">
+  <h2>Your hotspot must be 2.4 GHz</h2>
+  <p class="big">The ESP32 cannot see 5 GHz networks, and the venue Wi-Fi has a login page the board cannot get past.</p>
+  <div class="grid">
+    <div class="card"><h3>iPhone</h3><p>Settings › Personal Hotspot › turn on <strong>Maximise Compatibility</strong></p></div>
+    <div class="card"><h3>Android</h3><p>Hotspot › Advanced › Band › <strong>2.4 GHz</strong></p></div>
+    <div class="card"><h3>Names</h3><p>Plain letters and numbers, no spaces or emoji, in the name and password.</p></div>
+  </div>
+  <div class="callout">Both your laptop (for Claude) and the board (for ElevenLabs) need internet at the same time. Keep the hotspot on and your phone plugged in.</div>
+</section>
+
+<!-- 8 -->
+<section class="slide" data-title="Code 1: an LLM on a microcontroller" data-block="code1">
+  <div class="kicker">Code 1</div>
+  <h2>A 28.9M parameter LLM on your CoreS3</h2>
+  <p>A story model trained on TinyStories, running entirely on the chip. No cloud. Folder <code>code1-tinystories</code>.</p>
+  <pre><button class="copy">Copy</button>cd code1-tinystories
+# copy model.bin from the USB stick into model/
+pio run -t uploadmodel    # once per board, 15 MB, a minute or two
+pio run -t upload
+pio device monitor</pre>
+  <p class="muted">Check for <code>fp=a9bdd778</code> in the boot output: it confirms the model flashed correctly.</p>
+</section>
+
+<!-- 9 -->
+<section class="slide" data-title="Why it fits" data-block="code1">
+  <h2>How 28.9M parameters fit in 512 KB</h2>
+  <p>Put each part of the model where its read pattern belongs:</p>
+  <div class="tiers">
+    <div class="tier t1">SRAM 512 KB</div><div class="card">Activations and norm weights. Touched many times per token.</div>
+    <div class="tier t2">PSRAM 8 MB</div><div class="card">Core layers and output head, int8. Read once per token. This is the speed limit.</div>
+    <div class="tier t3">Flash 16 MB</div><div class="card">A 25M parameter embedding table. Only about 450 bytes read per token.</div>
+  </div>
+  <p>The trick is Google's Per-Layer Embeddings from Gemma 3n. <strong>Ask Claude:</strong> "Walk me through <code>include/llm.h</code> and explain where each tensor lives and why."</p>
+</section>
+
+<!-- 10 -->
+<section class="slide" data-title="Break" data-block="break">
+  <h1>Break</h1>
+  <p class="big">15 minutes.</p>
+  <p class="muted">Ahead of time? Start on Code 2: copy <code>secrets.example.h</code> to <code>secrets.h</code> and try the harness UI prompt.</p>
+</section>
+
+<!-- 11 -->
+<section class="slide" data-title="Code 2: the harness" data-block="code2">
+  <div class="kicker">Code 2</div>
+  <h2>Build the harness</h2>
+  <p>Start an empty folder, open Claude Code there and build one feature at a time. Reference: <code>code2-harness</code>.</p>
+  <h3>1 · Harness UI</h3>
+  <pre><button class="copy">Copy</button>Create a PlatformIO project for the M5Stack CoreS3 (board m5stack-cores3, Arduino framework, lib m5stack/M5Unified). Show a header bar and a home screen with four big touch buttons: WiFi, Record, Play, Chat. Chat is greyed out for now. Tapping a button opens that screen, each screen has a Back button. Use M5.Touch wasClicked() for taps. Add -I${PROJECT_DIR}/.. to build_flags so it can include secrets.h from the parent folder. Build it with pio run -s and fix any errors.</pre>
+  <h3>2 · Wi-Fi log in and out <span class="tag crit">Critical</span></h3>
+  <pre><button class="copy">Copy</button>On the WiFi screen add Scan, Connect and Disconnect buttons. Scan lists up to 8 networks with channel and RSSI and highlights WIFI_SSID from secrets.h. Connect uses WIFI_SSID and WIFI_PASSWORD, times out after 15 s and explains the failure: network not found (probably 5 GHz), wrong password, or timeout (captive portal). Show IP and RSSI when connected, and a green or red dot in the header. Include secrets.h through a __has_include check with a clear #error if it is missing.</pre>
+</section>
+
+<!-- 12 -->
+<section class="slide" data-title="Code 2: record and play" data-block="code2">
+  <h2>Voice record and play to SD</h2>
+  <pre><button class="copy">Copy</button>Add a Record screen: hold a big button to record 16 kHz mono from M5.Mic into a PSRAM buffer (max 30 s), show a level meter, and on release save a WAV file to /rec/recNNN.wav on the SD card. Add a Play screen listing the newest six recordings as buttons; tapping one plays it with M5.Speaker.playWav, tapping again stops it.
+CoreS3 details: SD is on SPI with CS 4, SCK 36, MISO 35, MOSI 37, shared with the screen, so start M5 first, then SPI.begin and SD.begin(4, SPI, 25000000). The mic and speaker share one I2S bus: call M5.Speaker.end() before M5.Mic.begin(), and M5.Mic.end() before M5.Speaker.begin(). Keep the WAV buffer allocated until playback finishes.</pre>
+  <h3>Common problems</h3>
+  <table>
+    <tr><td>Silent recording, or the speaker stops</td><td>Mic and speaker both started</td></tr>
+    <tr><td>"No SD card"</td><td>Not FAT32, or not fully in. Reset after inserting.</td></tr>
+    <tr><td>Crash on playback</td><td>WAV buffer freed while playing</td></tr>
+  </table>
+</section>
+
+<!-- 13 -->
+<section class="slide" data-title="Code 3: press to chat" data-block="code3">
+  <div class="kicker">Code 3</div>
+  <h2>Press to chat with an ElevenLabs agent</h2>
+  <div class="flow">
+    <span class="step">Connect WebSocket</span><span class="arrow">→</span>
+    <span class="step">Hold: stream mic, base64 PCM</span><span class="arrow">→</span>
+    <span class="step">Release: 1.2 s silence</span><span class="arrow">→</span>
+    <span class="step">Collect audio events</span><span class="arrow">→</span>
+    <span class="step">Play reply</span>
+  </div>
+  <div class="grid">
+    <div class="card">
+      <h3>Agent setup</h3>
+      <ul>
+        <li>Public agent: the device needs only the agent ID</li>
+        <li>Input and output audio: PCM 16000 Hz</li>
+        <li>Client tool <code>show_message</code>, string parameter <code>text</code></li>
+        <li>Agent ID into <code>secrets.h</code></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Watch out</h3>
+      <ul>
+        <li>Audio messages can exceed 15 KB: common WebSocket libraries drop them</li>
+        <li>Answer every <code>ping</code> with a <code>pong</code></li>
+        <li>Mic and speaker cannot run together</li>
+        <li>Hang up when done: minutes cost credits</li>
+      </ul>
+    </div>
+  </div>
+  <p class="muted">Reference: the Chat screen in <code>code2-harness</code>. Prompts are in its README.</p>
+</section>
+
+<!-- 14 -->
+<section class="slide" data-title="Hackathon menu" data-block="code3">
+  <h2>Hackathon: pick one</h2>
+  <table>
+    <tr><th>Feature</th><th>Rating</th><th>Hint</th></tr>
+    <tr><td>Press to chat with an agent</td><td><span class="tag stretch">Stretch</span></td><td>Start from the reference Chat screen if time is short</td></tr>
+    <tr><td>Agent shows text on the device</td><td><span class="tag ok">Feasible</span></td><td>Client tool <code>show_message</code></td></tr>
+    <tr><td>Agent starts a recording ("reverse tool")</td><td><span class="tag stretch">Stretch</span></td><td>Wait for the reply to finish playing first</td></tr>
+    <tr><td>Activity mode: send audio when it is loud enough</td><td><span class="tag stretch">Stretch</span></td><td>Speech to text, not TTS. Cap clip length</td></tr>
+    <tr><td>Keyword checks trigger device actions</td><td><span class="tag ok">Feasible</span></td><td>Match words in <code>user_transcript</code></td></tr>
+    <tr><td>Wi-Fi setup portal on the device</td><td><span class="tag ok">Feasible</span></td><td>WiFiManager-style captive portal</td></tr>
+  </table>
+</section>
+
+<!-- 15 -->
+<section class="slide" data-title="Advanced" data-block="code3">
+  <h2>Advanced, for later</h2>
+  <table>
+    <tr><th>Idea</th><th>Today</th><th>Why</th></tr>
+    <tr><td>Local wake word (ESP-SR WakeNet, MultiNet)</td><td><span class="tag stretch">Demo</span></td><td>Stock English wake words work on the S3, but ESP-SR needs its own flash partition and takes over the mic</td></tr>
+    <tr><td>Beamforming with the two mics</td><td><span class="tag no">Not today</span></td><td>Research-grade. ESP-SR's front end does two-mic noise suppression instead</td></tr>
+    <tr><td>Custom wake words</td><td><span class="tag no">Not today</span></td><td>Needs Espressif's training service</td></tr>
+  </table>
+</section>
+
+<!-- 16 -->
+<section class="slide" data-title="Making Claude last" data-block="code3">
+  <h2>Making your Claude usage last</h2>
+  <div class="grid">
+    <div class="card"><h3>Short builds</h3><p><code>pio run -s</code> shows only errors.</p></div>
+    <div class="card"><h3>Short logs</h3><p>Paste the five lines that matter, not the whole serial log.</p></div>
+    <div class="card"><h3>Fresh context</h3><p>New conversation per feature. Long ones cost more each turn.</p></div>
+    <div class="card"><h3>Fall back early</h3><p>Stuck for 10 minutes? Diff against the reference implementation.</p></div>
+  </div>
+</section>
+
+<!-- 17 -->
+<section class="slide" data-title="Wrap-up" data-block="end">
+  <h1>Thanks</h1>
+  <ul class="big">
+    <li>Keep the board: everything here runs on it at home</li>
+    <li>Your keys are in <code>secrets.h</code>, which git ignores. Do not paste them into a public fork</li>
+    <li>Hang up any agent sessions and revoke workshop API keys you no longer need</li>
+  </ul>
+</section>
+
+<footer>
+  <button id="prev" title="Previous (←)">←</button>
+  <button id="next" title="Next (→ or space)">→</button>
+  <span id="count"></span>
+  <div class="progress"><div id="bar"></div></div>
+  <span id="section"></span>
+  <span class="clock" id="clock" title="S start or pause · R reset">0:00</span>
+  <button id="tocbtn" title="Contents (C)">Contents</button>
+</footer>
+</div>
+
+<div id="toc"><h2>Contents</h2><ol id="toclist"></ol><p class="muted">Keys: ← → space · C contents · S start or pause clock · R reset clock · F full screen</p></div>
+
+<script>
+(() => {
+  const slides = [...document.querySelectorAll('.slide')];
+  // Planned start of each block, in minutes from the start of the workshop.
+  const plan = { intro: [0, 20], precode: [20, 65], code1: [65, 90], break: [90, 105], code2: [105, 155], code3: [155, 210], end: [210, 210] };
+  const names = { intro: 'Intro', precode: 'Pre-code', code1: 'Code 1', break: 'Break', code2: 'Code 2', code3: 'Code 3', end: 'Finish' };
+  let i = Math.min(Math.max(parseInt(location.hash.slice(1)) - 1 || 0, 0), slides.length - 1);
+
+  const show = n => {
+    i = Math.min(Math.max(n, 0), slides.length - 1);
+    slides.forEach((s, k) => s.classList.toggle('active', k === i));
+    document.getElementById('count').textContent = `${i + 1} / ${slides.length}`;
+    document.getElementById('bar').style.width = `${(i + 1) / slides.length * 100}%`;
+    const b = slides[i].dataset.block;
+    document.getElementById('section').textContent = `${names[b]} · planned ${fmt(plan[b][0] * 60)} to ${fmt(plan[b][1] * 60)}`;
+    history.replaceState(null, '', `#${i + 1}`);
+    tick();
+  };
+
+  // Workshop clock, kept in localStorage so a reload does not lose it.
+  const fmt = s => `${Math.floor(s / 3600)}:${String(Math.floor(s / 60) % 60).padStart(2, '0')}`;
+  const store = window.localStorage;
+  const clockEl = document.getElementById('clock');
+  const elapsed = () => {
+    const base = +store.getItem('clock.base') || 0, start = +store.getItem('clock.start') || 0;
+    return base + (start ? (Date.now() - start) / 1000 : 0);
+  };
+  function tick() {
+    const e = elapsed(), b = slides[i].dataset.block;
+    clockEl.textContent = (store.getItem('clock.start') ? '' : '⏸ ') + fmt(e);
+    clockEl.classList.toggle('late', e / 60 > plan[b][1] && b !== 'end');
+  }
+  const toggleClock = () => {
+    if (store.getItem('clock.start')) { store.setItem('clock.base', elapsed()); store.removeItem('clock.start'); }
+    else store.setItem('clock.start', Date.now());
+    tick();
+  };
+  const resetClock = () => { store.removeItem('clock.start'); store.setItem('clock.base', 0); tick(); };
+  setInterval(tick, 5000);
+
+  // Checklists remember their ticks.
+  document.querySelectorAll('.check').forEach(list => {
+    const key = 'check.' + list.dataset.store;
+    const saved = JSON.parse(store.getItem(key) || '[]');
+    [...list.children].forEach((li, k) => {
+      const box = li.querySelector('input');
+      box.checked = !!saved[k];
+      li.classList.toggle('done', box.checked);
+      li.addEventListener('click', e => {
+        if (e.target !== box) box.checked = !box.checked;
+        li.classList.toggle('done', box.checked);
+        store.setItem(key, JSON.stringify([...list.querySelectorAll('input')].map(b => b.checked)));
+      });
+    });
+  });
+
+  // Copy buttons on prompts and commands.
+  document.querySelectorAll('pre .copy').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const text = [...btn.parentNode.childNodes].filter(n => n !== btn).map(n => n.textContent).join('').trim();
+      try { await navigator.clipboard.writeText(text); }
+      catch { const r = document.createRange(); r.selectNodeContents(btn.parentNode); getSelection().removeAllRanges(); getSelection().addRange(r); document.execCommand('copy'); }
+      btn.textContent = 'Copied'; btn.classList.add('done');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('done'); }, 1500);
+    });
+  });
+
+  // Contents.
+  const toc = document.getElementById('toc');
+  slides.forEach((s, k) => {
+    const li = document.createElement('li');
+    li.innerHTML = `<a href="#${k + 1}">${s.dataset.title}</a>`;
+    li.firstChild.addEventListener('click', e => { e.preventDefault(); toc.classList.remove('open'); show(k); });
+    document.getElementById('toclist').appendChild(li);
+  });
+
+  document.getElementById('prev').onclick = () => show(i - 1);
+  document.getElementById('next').onclick = () => show(i + 1);
+  document.getElementById('tocbtn').onclick = () => toc.classList.toggle('open');
+  clockEl.onclick = toggleClock;
+  document.addEventListener('keydown', e => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const k = e.key.toLowerCase();
+    if (['arrowright', ' ', 'pagedown'].includes(k)) { e.preventDefault(); show(i + 1); }
+    else if (['arrowleft', 'pageup'].includes(k)) { e.preventDefault(); show(i - 1); }
+    else if (k === 'home') show(0);
+    else if (k === 'end') show(slides.length - 1);
+    else if (k === 'c') toc.classList.toggle('open');
+    else if (k === 'escape') toc.classList.remove('open');
+    else if (k === 's') toggleClock();
+    else if (k === 'r') resetClock();
+    else if (k === 'f') document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
+  });
+  window.addEventListener('hashchange', () => show((parseInt(location.hash.slice(1)) || 1) - 1));
+  show(i);
+})();
+</script>
+</body>
+</html>
