@@ -12,7 +12,8 @@ When you are done, run the check script for your OS. Every line should be OK or 
   - Android: Hotspot > Band > **2.4 GHz**.
   - Keep the hotspot name and password plain ASCII with no spaces.
 - Clone the workshop repo to a **short local path with no spaces**: `C:\dev\esp32-workshop` or `~/dev/esp32-workshop`. Not OneDrive, not iCloud Drive, not Desktop or Documents if those are synced.
-- Claude Code signed in (a paid plan is strongly recommended; the free tier will run out mid-workshop).
+- Claude Code signed in on a **Pro plan or higher**. The free Claude plan does not include Claude Code.
+- In the repo root, copy `secrets.example.h` to `secrets.h` and fill in your hotspot name and password. It is gitignored: never commit it, and never paste your keys into a public fork.
 
 ## Windows
 

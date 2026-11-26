@@ -4,3 +4,6 @@
 # Model files: hand out on USB or SD, do not commit (15 MB)
 code1-tinystories/model/*.bin
 code1-tinystories/model/tokenizer.json
+
+# Keys and WiFi passwords. Copy secrets.example.h to secrets.h.
+secrets.h
