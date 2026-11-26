@@ -1,0 +1,6 @@
+.pio/
+.vscode/
+.DS_Store
+# Model files: hand out on USB or SD, do not commit (15 MB)
+code1-tinystories/model/*.bin
+code1-tinystories/model/tokenizer.json
